@@ -1,0 +1,33 @@
+html {
+    font-size: 62.5%;
+}
+
+body {
+    padding: 3rem;
+    font-size: 1.6rem;
+}
+
+.u-center-text {
+  text-align: center; }
+
+.header {
+    position: relative;
+}
+
+.heading-primary {
+  position: absolute;
+  top: 30vh;
+  left: 50%;
+  transform: translate(-50%, -50%); }
+  .heading-primary--main {
+    display: inline-block;
+    font-size: 3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 2rem;}
+  .heading-primary--sub h5{
+    font-size: 2rem;
+    font-weight: 400; 
+    margin: 0;}
+
+
