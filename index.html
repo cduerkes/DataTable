@@ -20,16 +20,24 @@
             </h1>
         </div>
     </header>
-
-    <input type="file" id="csv-file" name="files"/>
-    <table id="search" cellpadding="2" cellspacing="0" border="0" style="width: 50%; margin: 50vh auto 2em auto;"></table>
-    <table id="body" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Heading</th>
-            </tr>
-        </thead>
-    </table>
+    <main>
+        <h1 class="tableTitle">Genesis Interview Homework (UI/UX)</h1>
+        <input type="file" id="csv-file" name="files"/>
+        <section id="search-wrapper">
+            <table id="search-template" cellpadding="2" cellspacing="0" border="0">
+            </table>
+        </section>
+        <section>
+            <div class="metaDiv"><span>Console: </span></div>
+            <table id="main-template" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Heading</th>
+                    </tr>
+                </thead>
+            </table>
+        </section>
+    </main>
 </body>
 </html>
 
