@@ -17,7 +17,7 @@ body {
 
 .heading-primary {
     position: absolute;
-    top: 30vh;
+    top: 40vh;
     left: 50%;
     transform: translate(-50%, -50%);
 }
@@ -42,11 +42,6 @@ section#search-wrapper {
     padding: 1.5rem 0;
     margin: 3rem 0;
     border-radius: 5px;
-}
-
-#search-template {
-    width: 50%; 
-    margin: 50vh auto 0;
 }
 
 #main th { 

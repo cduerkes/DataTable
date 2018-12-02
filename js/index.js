@@ -1,112 +1,21 @@
 $(document).ready(function() {
-    // Don't initially display main table title and metadata div
-    $('.tableTitle, .metaDiv').hide();
-
-    // Initiate main table template
-    $('#main-template').DataTable();
-
     // Call parse data function when file uploaded
     $("#csv-file").change(parseData);
-
-    // Detect scroll position to style sticky metadata div
-    $(document).scroll(function() {
-      var y = $(this).scrollTop();
-      console.log(`scrolltop: ${y}`);
-
-      if (y > 375) {
-        $('.metaDiv').fadeIn();
-        $('.metaDiv').css({
-            "position": "fixed", 
-        });
-      } else {
-        $('.metaDiv').css({
-            "position": "static"
-        });
-      }
-    });
-
-    // Set up event listener on input fields to filter corresponding columns
-    $('body').on( 'keyup click', 'input.column_filter', function () {
-        filterColumn( $(this).parents('tr').attr('data-column') );
-    });
-
-    // Set up event listener on table rows to get and display visible table row
-    $('body').on( 'mouseenter', 'tr', function () {
-        const table = $('#main').DataTable();
-        const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
-        if (rowNumber >= 0) {
-            $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
-        }
-    });
-
-    // Set up event listener on table cells to eventually display of column type when hovering over column names
-    // Question 6 referred to a 'column type'
-    $('body').on( 'mouseenter', 'td', function () {
-        const table = $('#main').DataTable();
-        const data = table.cell( this ).data();
-
-    // Detect data types
-        if (typeof(data) !== 'undefined') {
-            if (data[0] ==='$') {
-                console.log('currency');
-            } else if (data.toString().indexOf("/") > -1) {
-                console.log('date');
-            } else if (!isNaN(parseInt(data))) {
-                console.log('number');
-            } else {
-                console.log('string');
-            }
-        }
-    });
-
-    // Set up event listener on table heading to get and display column sort method and search term, if applied
-    $('body').on( 'mouseenter', '#main th', function () {
-        const table = $('#main').DataTable();
-        let sort = $(this).attr("aria-sort");
-        let search = table.column(this).search();
-
-        if (search !== '') {
-            $('.metaDiv').text(`Search by: ${search}`);
-        }
-
-        if (typeof sort !== "undefined") {
-            if (search !== '') {
-                $('.metaDiv').text(`Search by: ${search}, Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-            } else {
-                $('.metaDiv').text(`Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-            }
-
-        } else {
-            console.log("Unsorted");
-        }
-    });
 });
 
-// Function to parse csv file and then render html strings and update index column
+// Function to parse csv file, remove home page header and render table
 function parseData(e) {
     const file = e.target.files[0];
 
     Papa.parse(file, {
         dynamicTyping: true,
         complete: function(results) {
-            renderSearch(results.data);
-            renderTable(results.data);
-            getRowIndex();
-            $('.tableTitle, .metaDiv').show();
+            $('header').hide();
+            $('main').prepend(`<h1 class="tableTitle">Genesis Interview Homework (UI/UX)</h1>`);
+            createTable(results.data);
+            addEventListeners();
         }
     });
-}
-
-// Function to build search table header
-function buildSearchHeader() {
-    const header = `
-        <tr>
-            <th>Target</th>
-            <th>Search text</th>
-            <th>Treat as regex</th>
-        </tr>
-    `;
-    return header;
 }
 
 // Function to build search table body
@@ -124,19 +33,24 @@ function buildSearchBody(data) {
     return rows;
 }
 
-// Function to replace template html with search table
+// Function to render search table
 function renderSearch(data) {
-    const sheader = buildSearchHeader();
-    const sbody = buildSearchBody(data);
+    const body = buildSearchBody(data);
     
     const searchTable = `
     <table cellpadding="3" cellspacing="0" border="0" style="width: 50%; margin: 0 auto 2em auto;">
-        <thead>${sheader}</thead>
-        <tbody>${sbody}<tbody>
+        <thead>        
+            <tr>
+                <th>Target</th>
+                <th>Search text</th>
+                <th>Treat as regex</th>
+            </tr>
+        </thead>
+        <tbody>${body}<tbody>
     </table>
     `;
 
-    $('#search-template').replaceWith(searchTable);
+    $('#search-wrapper').append(searchTable);
 }
 
 // Function to filter table data using input values/regular expressions
@@ -178,7 +92,7 @@ function buildTableBody(data) {
     return rows;
 }
 
-// Function to replace template html with data table
+// Function to render main table
 function renderTable(data) {
     const header = buildTableHeader(data);
     const body = buildTableBody(data);
@@ -189,12 +103,7 @@ function renderTable(data) {
         <tbody>${body}<tbody>
     </table>`;
 
-    $('header').hide();
-    $('#main-template').parent().replaceWith(table);
-    $('#main').DataTable({
-        fixedHeader: true,
-        "pageLength": 50
-    });
+    $('#table-wrapper').append(table);
 }
 
 // Function to update index column with original row number
@@ -205,6 +114,95 @@ function getRowIndex() {
         const data = this.data();
         data[0] = rowIdx + 1;
         this.data(data);
+    });
+}
+
+function createTable(data) {
+    // render console
+    $('#table-wrapper').prepend(`<div class="metaDiv"><span>Console: </span></div>`);
+
+    // render search and main tables
+    renderSearch(data);
+    renderTable(data);
+
+    // initialize data table
+    $('#main').DataTable({
+        fixedHeader: true,
+        "pageLength": 50
+    });
+}
+
+function addEventListeners() {
+    // Detect scroll position to style sticky metadata div
+    $(document).scroll(function() {
+      var y = $(this).scrollTop();
+
+      if (y > 375) {
+        $('.metaDiv').fadeIn();
+        $('.metaDiv').css({
+            "position": "fixed", 
+        });
+      } else {
+        $('.metaDiv').css({
+            "position": "static"
+        });
+      }
+    });
+
+    // Event listener on input fields to filter corresponding columns
+    $('body').on( 'keyup click', 'input.column_filter', function () {
+        filterColumn( $(this).parents('tr').attr('data-column') );
+    });
+
+    // Event listener on table rows to get and display visible table row
+    $('body').on( 'mouseenter', 'tr', function () {
+        const table = $('#main').DataTable();
+        const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
+        if (rowNumber >= 0) {
+            $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
+        }
+    });
+
+    // Event listener on table cells to eventually display of column type when hovering over column names
+    // Question 6 referred to a 'column type'
+    $('body').on( 'mouseenter', 'td', function () {
+        const table = $('#main').DataTable();
+        const data = table.cell( this ).data();
+
+    // Detect data types
+        if (typeof(data) !== 'undefined') {
+            if (data[0] ==='$') {
+                console.log('currency');
+            } else if (data.toString().indexOf("/") > -1) {
+                console.log('date');
+            } else if (!isNaN(parseInt(data))) {
+                console.log('number');
+            } else {
+                console.log('string');
+            }
+        }
+    });
+
+    // Set up event listener on table heading to get and display column sort method and search term, if applied
+    $('body').on( 'mouseenter', '#main th', function () {
+        const table = $('#main').DataTable();
+        let sort = $(this).attr("aria-sort");
+        let search = table.column(this).search();
+
+        if (search !== '') {
+            $('.metaDiv').text(`Search by: ${search}`);
+        }
+
+        if (typeof sort !== "undefined") {
+            if (search !== '') {
+                $('.metaDiv').text(`Search by: ${search}, Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
+            } else {
+                $('.metaDiv').text(`Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
+            }
+
+        } else {
+            console.log("Unsorted");
+        }
     });
 }
 
