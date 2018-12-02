@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    // Don't initially display main table title metadata div
+    // Don't initially display main table title and metadata div
     $('.tableTitle, .metaDiv').hide();
 
     // Initiate main table template
@@ -11,21 +11,16 @@ $(document).ready(function() {
     // Detect scroll position to style sticky metadata div
     $(document).scroll(function() {
       var y = $(this).scrollTop();
+      console.log(`scrolltop: ${y}`);
 
-      if (y > 300) {
+      if (y > 375) {
         $('.metaDiv').fadeIn();
         $('.metaDiv').css({
             "position": "fixed", 
-            "top": "39px",
-            "width": "50%",
-            "height": "50px"
         });
       } else {
         $('.metaDiv').css({
-            "position": "static", 
-            "margin": "0 0 3rem", 
-            "width": "50%",
-            "height": "35px"
+            "position": "static"
         });
       }
     });
@@ -38,8 +33,7 @@ $(document).ready(function() {
     // Set up event listener on table rows to get and display visible table row
     $('body').on( 'mouseenter', 'tr', function () {
         const table = $('#main').DataTable();
-
-        var rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
+        const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
         if (rowNumber >= 0) {
             $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
         }
@@ -104,7 +98,7 @@ function parseData(e) {
 }
 
 // Function to build search table header
-function getSearchHeader() {
+function buildSearchHeader() {
     const header = `
         <tr>
             <th>Target</th>
@@ -116,7 +110,7 @@ function getSearchHeader() {
 }
 
 // Function to build search table body
-function getSearchBody(data) {
+function buildSearchBody(data) {
     let rows = ``;
 
     for (let i = 0; i < data[0].length; i++) {
@@ -132,8 +126,8 @@ function getSearchBody(data) {
 
 // Function to replace template html with search table
 function renderSearch(data) {
-    const sheader = getSearchHeader();
-    const sbody = getSearchBody(data);
+    const sheader = buildSearchHeader();
+    const sbody = buildSearchBody(data);
     
     const searchTable = `
     <table cellpadding="3" cellspacing="0" border="0" style="width: 50%; margin: 0 auto 2em auto;">
@@ -154,7 +148,7 @@ function filterColumn ( i ) {
 }
 
 // Function to build main table header
-function getTableHeader(data) {
+function buildTableHeader(data) {
     let rows = `<tr>`;
         rows += `<th>Index</th>`;
 
@@ -167,12 +161,12 @@ function getTableHeader(data) {
 }
 
 // Function to build main table body
-function getTableBody(data) {
+function buildTableBody(data) {
     let rows = '';
 
     for (let i = 1; i < data.length; i++) {
         rows += `<tr>`;
-        rows += `<td>Index</td>`;
+        rows += `<td></td>`;
 
         for (let j = 0; j < data[i].length; j++) {
             rows += `<td>${data[i][j]}</td>`;
@@ -186,8 +180,8 @@ function getTableBody(data) {
 
 // Function to replace template html with data table
 function renderTable(data) {
-    const header = getTableHeader(data);
-    const body = getTableBody(data);
+    const header = buildTableHeader(data);
+    const body = buildTableBody(data);
     
     const table = `
     <table id="main" class="display" style="width:100%">
