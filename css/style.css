@@ -7,6 +7,16 @@ body {
     font-size: 1.6rem;
 }
 
+a {
+    cursor: pointer;
+    color: rgba(4,51,255,.8);
+    text-decoration: none;
+}
+
+a {
+    text-decoration: underline;
+}
+
 .u-center-text {
     text-align: center;
 }

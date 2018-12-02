@@ -1,6 +1,9 @@
 $(document).ready(function() {
     // Call parse data function when file uploaded
     $("#csv-file").change(parseData);
+
+    const table = $('#main').DataTable();
+
 });
 
 // Function to parse csv file, remove home page header and render table
@@ -13,6 +16,8 @@ function parseData(e) {
             $('header').hide();
             $('main').prepend(`<h1 class="tableTitle">Genesis Interview Homework (UI/UX)</h1>`);
             createTable(results.data);
+            $('main_wrapper').prepend(`<a class="toggle-vis" data-column="0">Name</a>
+        <a class="toggle-vis" data-column="1">Name</a>`);
             addEventListeners();
         }
     });
@@ -128,11 +133,17 @@ function createTable(data) {
     // initialize data table
     $('#main').DataTable({
         fixedHeader: true,
+        colReorder: true,
         "pageLength": 50
     });
+
+    // get index column data
+    getRowIndex();
 }
 
 function addEventListeners() {
+    const table = $('#main').DataTable();
+
     // Detect scroll position to style sticky metadata div
     $(document).scroll(function() {
       var y = $(this).scrollTop();
@@ -156,7 +167,6 @@ function addEventListeners() {
 
     // Event listener on table rows to get and display visible table row
     $('body').on( 'mouseenter', 'tr', function () {
-        const table = $('#main').DataTable();
         const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
         if (rowNumber >= 0) {
             $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
@@ -166,7 +176,6 @@ function addEventListeners() {
     // Event listener on table cells to eventually display of column type when hovering over column names
     // Question 6 referred to a 'column type'
     $('body').on( 'mouseenter', 'td', function () {
-        const table = $('#main').DataTable();
         const data = table.cell( this ).data();
 
     // Detect data types
@@ -185,7 +194,6 @@ function addEventListeners() {
 
     // Set up event listener on table heading to get and display column sort method and search term, if applied
     $('body').on( 'mouseenter', '#main th', function () {
-        const table = $('#main').DataTable();
         let sort = $(this).attr("aria-sort");
         let search = table.column(this).search();
 
@@ -203,6 +211,16 @@ function addEventListeners() {
         } else {
             console.log("Unsorted");
         }
+    });
+
+    $('a.toggle-vis').on( 'click', function (e) {
+        e.preventDefault();
+
+        // Get the column API object
+        var column = table.column( $(this).attr('data-column') );
+
+        // Toggle the visibility
+        column.visible( ! column.visible() );
     });
 }
 
