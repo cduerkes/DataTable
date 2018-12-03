@@ -1,9 +1,6 @@
 $(document).ready(function() {
     // Call parse data function when file uploaded
     $("#csv-file").change(parseData);
-
-    const table = $('#main').DataTable();
-
 });
 
 // Function to parse csv file, remove home page header and render table
@@ -16,8 +13,6 @@ function parseData(e) {
             $('header').hide();
             $('main').prepend(`<h1 class="tableTitle">Genesis Interview Homework (UI/UX)</h1>`);
             createTable(results.data);
-            $('main_wrapper').prepend(`<a class="toggle-vis" data-column="0">Name</a>
-        <a class="toggle-vis" data-column="1">Name</a>`);
             addEventListeners();
         }
     });
@@ -83,11 +78,13 @@ function buildTableHeader(data) {
 function buildTableBody(data) {
     let rows = '';
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 1; i < data.length - 1; i++) {
+        console.log(data.length)
         rows += `<tr>`;
         rows += `<td></td>`;
 
         for (let j = 0; j < data[i].length; j++) {
+            console.log(data[i].length)
             rows += `<td>${data[i][j]}</td>`;
         }
 
@@ -101,11 +98,19 @@ function buildTableBody(data) {
 function renderTable(data) {
     const header = buildTableHeader(data);
     const body = buildTableBody(data);
+    const columns = data[0].length;
+    console.log(`columns: ${columns}`)
     
     const table = `
     <table id="main" class="display" style="width:100%">
         <thead>${header}</thead>
         <tbody>${body}<tbody>
+        <tfoot>
+            <tr>
+                <th colspan="${columns - 1}" style="text-align:right">Page Total (Salary):</th>
+                <th colspan="2" class="total"></th>
+            </tr>
+        </tfoot>
     </table>`;
 
     $('#table-wrapper').append(table);
@@ -134,11 +139,96 @@ function createTable(data) {
     $('#main').DataTable({
         fixedHeader: true,
         colReorder: true,
-        "pageLength": 50
+        "pageLength": 50,
+        "footerCallback": function ( row, data, start, end, display ) {
+            var api = this.api(), data;
+ 
+            // Remove the formatting to get integer data for summation
+            var intVal = function ( i ) {
+                return typeof i === 'string' ?
+                    i.replace(/[\$,]/g, '')*1 :
+                    typeof i === 'number' ?
+                        i : 0;
+            };
+ 
+            // Total over all pages
+            var total = api
+                .column( 6 )
+                .data()
+                .reduce( function (a, b) {
+                    console.log(a, b);
+                    return intVal(a) + intVal(b);
+                }, 0 );
+ 
+            // Total over this page
+            var pageTotal = api
+                .column( 6, { page: 'current'} )
+                .data()
+                .reduce( function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0 );
+ 
+            // Update footer
+            $( api.column( 6 ).footer() ).html(
+                '$'+pageTotal +' ( $'+ total +' total)'
+            );
+        }
     });
 
     // get index column data
     getRowIndex();
+}
+
+function positionMetaDiv() {
+    var y = $(this).scrollTop();
+
+    if (y > 375) {
+        $('.metaDiv').fadeIn();
+        $('.metaDiv').css({
+            "position": "fixed", 
+        });
+    } else {
+        $('.metaDiv').css({
+            "position": "static"
+        });
+    }
+}
+
+function displayDataType(table, e) {
+    const data = table.cell(e.target).data();
+
+// Detect data types
+    if (typeof(data) !== 'undefined') {
+        if (data[0] ==='$') {
+            console.log('currency');
+        } else if (data.toString().indexOf("/") > -1) {
+            console.log('date');
+        } else if (!isNaN(parseInt(data))) {
+            console.log('number');
+        } else {
+            console.log('string');
+        }
+    }
+}
+
+function displaySortSearch(table, e) {
+    let sort = $(e.target).attr("aria-sort");
+    let search = table.column(e.target).search();
+
+    if (search !== '') {
+        $('.metaDiv').text(`Search by: ${search}`);
+    }
+
+    if (typeof sort !== "undefined") {
+        if (search !== '') {
+            $('.metaDiv').text(`Search by: ${search}, Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
+        } else {
+            $('.metaDiv').text(`Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
+        }
+
+    } else {
+        console.log("Unsorted");
+    }
 }
 
 function addEventListeners() {
@@ -146,27 +236,16 @@ function addEventListeners() {
 
     // Detect scroll position to style sticky metadata div
     $(document).scroll(function() {
-      var y = $(this).scrollTop();
-
-      if (y > 375) {
-        $('.metaDiv').fadeIn();
-        $('.metaDiv').css({
-            "position": "fixed", 
-        });
-      } else {
-        $('.metaDiv').css({
-            "position": "static"
-        });
-      }
+        positionMetaDiv();
     });
 
     // Event listener on input fields to filter corresponding columns
-    $('body').on( 'keyup click', 'input.column_filter', function () {
+    $('input.column_filter').on( 'keyup click', function () {
         filterColumn( $(this).parents('tr').attr('data-column') );
     });
 
     // Event listener on table rows to get and display visible table row
-    $('body').on( 'mouseenter', 'tr', function () {
+    $('body').on('mouseenter', 'tr', function() {
         const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
         if (rowNumber >= 0) {
             $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
@@ -175,43 +254,10 @@ function addEventListeners() {
 
     // Event listener on table cells to eventually display of column type when hovering over column names
     // Question 6 referred to a 'column type'
-    $('body').on( 'mouseenter', 'td', function () {
-        const data = table.cell( this ).data();
-
-    // Detect data types
-        if (typeof(data) !== 'undefined') {
-            if (data[0] ==='$') {
-                console.log('currency');
-            } else if (data.toString().indexOf("/") > -1) {
-                console.log('date');
-            } else if (!isNaN(parseInt(data))) {
-                console.log('number');
-            } else {
-                console.log('string');
-            }
-        }
-    });
+    $('td').on('mouseenter', displayDataType.bind(this, table));
 
     // Set up event listener on table heading to get and display column sort method and search term, if applied
-    $('body').on( 'mouseenter', '#main th', function () {
-        let sort = $(this).attr("aria-sort");
-        let search = table.column(this).search();
-
-        if (search !== '') {
-            $('.metaDiv').text(`Search by: ${search}`);
-        }
-
-        if (typeof sort !== "undefined") {
-            if (search !== '') {
-                $('.metaDiv').text(`Search by: ${search}, Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-            } else {
-                $('.metaDiv').text(`Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-            }
-
-        } else {
-            console.log("Unsorted");
-        }
-    });
+    $('#main th').on('mouseenter', displaySortSearch.bind(this, table));
 
     $('a.toggle-vis').on( 'click', function (e) {
         e.preventDefault();
