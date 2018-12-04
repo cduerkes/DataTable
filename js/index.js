@@ -79,12 +79,10 @@ function buildTableBody(data) {
     let rows = '';
 
     for (let i = 1; i < data.length - 1; i++) {
-        console.log(data.length)
         rows += `<tr>`;
         rows += `<td></td>`;
 
         for (let j = 0; j < data[i].length; j++) {
-            console.log(data[i].length)
             rows += `<td>${data[i][j]}</td>`;
         }
 
@@ -99,8 +97,7 @@ function renderTable(data) {
     const header = buildTableHeader(data);
     const body = buildTableBody(data);
     const columns = data[0].length;
-    console.log(`columns: ${columns}`)
-    
+
     const table = `
     <table id="main" class="display" style="width:100%">
         <thead>${header}</thead>
@@ -127,6 +124,22 @@ function getRowIndex() {
     });
 }
 
+function addToggleLinks() {
+    const table = $('#main').DataTable();
+    let headers = [];
+    let idx = '';
+    table.columns(':visible').every( function () {
+        let header = $(this.header()).text();
+        headers.push(`<a class="toggle-vis" data-column="${this.index()}">${header}</a>`);
+    })
+    headers.shift();
+    headers = headers.join(' - ');
+    console.log(headers)
+    headers = `<div class="togglers">Toggle column: ${headers}</div>`;
+    $("#main_filter").before(headers);
+
+}
+
 function createTable(data) {
     // render console
     $('#table-wrapper').prepend(`<div class="metaDiv"><span>Console: </span></div>`);
@@ -140,6 +153,10 @@ function createTable(data) {
         fixedHeader: true,
         colReorder: true,
         "pageLength": 50,
+        "columnDefs": [{
+            "searchable": false,
+            "targets": 0
+        }],
         "footerCallback": function ( row, data, start, end, display ) {
             var api = this.api(), data;
  
@@ -156,7 +173,6 @@ function createTable(data) {
                 .column( 6 )
                 .data()
                 .reduce( function (a, b) {
-                    console.log(a, b);
                     return intVal(a) + intVal(b);
                 }, 0 );
  
@@ -177,6 +193,7 @@ function createTable(data) {
 
     // get index column data
     getRowIndex();
+    addToggleLinks();
 }
 
 function positionMetaDiv() {
@@ -233,30 +250,26 @@ function addEventListeners() {
      // Detect data types
         if (typeof(data) !== 'undefined') {
             if (data[0] ==='$') {
-                messageList+='<div class="message">type: currency</div>';
-                console.log('currency');
+                messageList+='<div class="message">Column type: currency</div>';
             } else if (data.toString().indexOf("/") > -1) {
-                messageList+='<div class="message">type: date</div>';
+                messageList+='<div class="message">Column type: date</div>';
 //                messageList.push('Column type: date');
-                console.log('date');
             } else if (!isNaN(parseInt(data))) {
-                messageList+='<div class="message">type: number</div>';
+                messageList+='<div class="message">Column type: number</div>';
 //                messageList.push('Column type: number');
-                console.log('number');
             } else {
-                messageList+='<div class="message">type: string</div>';
+                messageList+='<div class="message">Column type: string</div>';
 //                messageList.push('Column type: string');
-                console.log('string');
             }
         }
 
         if (search !== '') {
-            messageList+=`<div class="message">search by: ${search}</div>`;
+            messageList+=`<div class="message">Search by: ${search}</div>`;
             //messageList.push(`Search by: ${search}`);
         }
 
         if (typeof sort !== "undefined") {
-            messageList+=`<div class="message">sort: ${sort}</div>`;
+            messageList+=`<div class="message">Sort: ${sort}</div>`;
             //messageList.push(`Sort: ${toUpperCase(sort)}`);
         } else {
             console.log("Unsorted");

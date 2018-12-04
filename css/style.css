@@ -112,4 +112,12 @@ table.dataTable tfoot th, table.dataTable tfoot td {
     margin-right: 10px;
 }
 
+.dataTables_wrapper .dataTables_length {
+    float: none;
+}
+
+.togglers {
+    float: left;
+}
+
 
