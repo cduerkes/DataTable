@@ -100,4 +100,16 @@ table.dataTable tfoot th, table.dataTable tfoot td {
     border-top: 1px solid #111;
 }
 
+.message {
+    height: 3rem;
+    border-radius: 5px;
+/*    background-color: #eaeaea;*/
+    display: inline-block;
+    padding: 5px 15px;
+}
+
+.message:not(:last-child) {
+    margin-right: 10px;
+}
+
 

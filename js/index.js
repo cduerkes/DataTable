@@ -186,49 +186,18 @@ function positionMetaDiv() {
         $('.metaDiv').fadeIn();
         $('.metaDiv').css({
             "position": "fixed", 
+            "border-bottom": "1px solid #ddd"
         });
     } else {
         $('.metaDiv').css({
-            "position": "static"
+            "position": "static",
+            "border-bottom": ""
         });
     }
 }
 
-function displayDataType(table, e) {
-    const data = table.cell(e.target).data();
-
-// Detect data types
-    if (typeof(data) !== 'undefined') {
-        if (data[0] ==='$') {
-            console.log('currency');
-        } else if (data.toString().indexOf("/") > -1) {
-            console.log('date');
-        } else if (!isNaN(parseInt(data))) {
-            console.log('number');
-        } else {
-            console.log('string');
-        }
-    }
-}
-
-function displaySortSearch(table, e) {
-    let sort = $(e.target).attr("aria-sort");
-    let search = table.column(e.target).search();
-
-    if (search !== '') {
-        $('.metaDiv').text(`Search by: ${search}`);
-    }
-
-    if (typeof sort !== "undefined") {
-        if (search !== '') {
-            $('.metaDiv').text(`Search by: ${search}, Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-        } else {
-            $('.metaDiv').text(`Sort: ${sort.charAt(0).toUpperCase() + sort.slice(1).toLowerCase()}`);
-        }
-
-    } else {
-        console.log("Unsorted");
-    }
+function toUpperCase(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
 function addEventListeners() {
@@ -245,19 +214,57 @@ function addEventListeners() {
     });
 
     // Event listener on table rows to get and display visible table row
-    $('body').on('mouseenter', 'tr', function() {
+    $('body').on('mouseenter', '#main tr', function() {
         const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
         if (rowNumber >= 0) {
             $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
         }
     });
 
-    // Event listener on table cells to eventually display of column type when hovering over column names
-    // Question 6 referred to a 'column type'
-    $('td').on('mouseenter', displayDataType.bind(this, table));
+    // Event listener on table heading to display column data type, search term and sorting method
+    $('body').on( 'mouseenter', '#main thead th', function () {
 
-    // Set up event listener on table heading to get and display column sort method and search term, if applied
-    $('#main th').on('mouseenter', displaySortSearch.bind(this, table));
+        const data = table.column(this).data()[0];
+        let sort = $(this).attr("aria-sort");
+        let search = table.column(this).search();
+
+        let messageList = '';
+
+     // Detect data types
+        if (typeof(data) !== 'undefined') {
+            if (data[0] ==='$') {
+                messageList+='<div class="message">type: currency</div>';
+                console.log('currency');
+            } else if (data.toString().indexOf("/") > -1) {
+                messageList+='<div class="message">type: date</div>';
+//                messageList.push('Column type: date');
+                console.log('date');
+            } else if (!isNaN(parseInt(data))) {
+                messageList+='<div class="message">type: number</div>';
+//                messageList.push('Column type: number');
+                console.log('number');
+            } else {
+                messageList+='<div class="message">type: string</div>';
+//                messageList.push('Column type: string');
+                console.log('string');
+            }
+        }
+
+        if (search !== '') {
+            messageList+=`<div class="message">search by: ${search}</div>`;
+            //messageList.push(`Search by: ${search}`);
+        }
+
+        if (typeof sort !== "undefined") {
+            messageList+=`<div class="message">sort: ${sort}</div>`;
+            //messageList.push(`Sort: ${toUpperCase(sort)}`);
+        } else {
+            console.log("Unsorted");
+        }
+
+       // $('.metaDiv').text(messageList.join(' | '));
+       $('.metaDiv').html('').append(messageList);
+    });
 
     $('a.toggle-vis').on( 'click', function (e) {
         e.preventDefault();
@@ -266,7 +273,7 @@ function addEventListeners() {
         var column = table.column( $(this).attr('data-column') );
 
         // Toggle the visibility
-        column.visible( ! column.visible() );
+        column.visible( !column.visible() );
     });
 }
 
