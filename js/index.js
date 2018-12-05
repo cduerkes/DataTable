@@ -18,6 +18,31 @@ function parseData(e) {
     });
 }
 
+function createTable(data) {
+    // render console
+    $('#table-wrapper').prepend(`<div class="metaDiv"><span>Console: </span></div>`);
+
+    // render search and main tables
+    renderSearch(data);
+    renderTable(data);
+
+    // initialize data table
+    $('#main').DataTable({
+        "fixedHeader": true,
+        "colReorder": true,
+        "pageLength": 50,
+        "columnDefs": [
+            { "targets": 0, "searchable": false},
+            { "targets": "_all", "className": "dt-body-left" }
+        ]
+    });
+
+    // get index column data
+    getRowIndex();
+
+    addToggleLinks();
+}
+
 // Function to build search table body
 function buildSearchBody(data) {
     let rows = ``;
@@ -102,119 +127,9 @@ function renderTable(data) {
     <table id="main" class="display" style="width:100%">
         <thead>${header}</thead>
         <tbody>${body}<tbody>
-        <tfoot>
-            <tr>
-                <th colspan="${columns - 1}" style="text-align:right">Page Total (Salary):</th>
-                <th colspan="2" class="total"></th>
-            </tr>
-        </tfoot>
     </table>`;
 
     $('#table-wrapper').append(table);
-}
-
-// Function to update index column with original row number
-function getRowIndex() {
-    const table = $('#main').DataTable();
-    
-    table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
-        const data = this.data();
-        data[0] = rowIdx + 1;
-        this.data(data);
-    });
-}
-
-function addToggleLinks() {
-    const table = $('#main').DataTable();
-    let headers = [];
-    let idx = '';
-    table.columns(':visible').every( function () {
-        let header = $(this.header()).text();
-        headers.push(`<a class="toggle-vis" data-column="${this.index()}">${header}</a>`);
-    })
-    headers.shift();
-    headers = headers.join(' - ');
-    console.log(headers)
-    headers = `<div class="togglers">Toggle column: ${headers}</div>`;
-    $("#main_filter").before(headers);
-
-}
-
-function createTable(data) {
-    // render console
-    $('#table-wrapper').prepend(`<div class="metaDiv"><span>Console: </span></div>`);
-
-    // render search and main tables
-    renderSearch(data);
-    renderTable(data);
-
-    // initialize data table
-    $('#main').DataTable({
-        fixedHeader: true,
-        colReorder: true,
-        "pageLength": 50,
-        "columnDefs": [{
-            "searchable": false,
-            "targets": 0
-        }],
-        "footerCallback": function ( row, data, start, end, display ) {
-            var api = this.api(), data;
- 
-            // Remove the formatting to get integer data for summation
-            var intVal = function ( i ) {
-                return typeof i === 'string' ?
-                    i.replace(/[\$,]/g, '')*1 :
-                    typeof i === 'number' ?
-                        i : 0;
-            };
- 
-            // Total over all pages
-            var total = api
-                .column( 6 )
-                .data()
-                .reduce( function (a, b) {
-                    return intVal(a) + intVal(b);
-                }, 0 );
- 
-            // Total over this page
-            var pageTotal = api
-                .column( 6, { page: 'current'} )
-                .data()
-                .reduce( function (a, b) {
-                    return intVal(a) + intVal(b);
-                }, 0 );
- 
-            // Update footer
-            $( api.column( 6 ).footer() ).html(
-                '$'+pageTotal +' ( $'+ total +' total)'
-            );
-        }
-    });
-
-    // get index column data
-    getRowIndex();
-    addToggleLinks();
-}
-
-function positionMetaDiv() {
-    var y = $(this).scrollTop();
-
-    if (y > 375) {
-        $('.metaDiv').fadeIn();
-        $('.metaDiv').css({
-            "position": "fixed", 
-            "border-bottom": "1px solid #ddd"
-        });
-    } else {
-        $('.metaDiv').css({
-            "position": "static",
-            "border-bottom": ""
-        });
-    }
-}
-
-function toUpperCase(text) {
-    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
 function addEventListeners() {
@@ -234,49 +149,42 @@ function addEventListeners() {
     $('body').on('mouseenter', '#main tr', function() {
         const rowNumber = table.rows( { order: 'applied' } ).nodes().indexOf( this );
         if (rowNumber >= 0) {
-            $('.metaDiv').text(`Current row: ${rowNumber + 1}`);
+            $('.metaDiv').html('').append(`Current row: ${rowNumber + 1}`);
         }
     });
 
     // Event listener on table heading to display column data type, search term and sorting method
     $('body').on( 'mouseenter', '#main thead th', function () {
-
         const data = table.column(this).data()[0];
         let sort = $(this).attr("aria-sort");
         let search = table.column(this).search();
 
-        let messageList = '';
+        let messageList = [];
 
-     // Detect data types
+    //  Detect data types
         if (typeof(data) !== 'undefined') {
             if (data[0] ==='$') {
-                messageList+='<div class="message">Column type: currency</div>';
+                messageList.push('Type: currency');
             } else if (data.toString().indexOf("/") > -1) {
-                messageList+='<div class="message">Column type: date</div>';
-//                messageList.push('Column type: date');
+                messageList.push('Type: date');
             } else if (!isNaN(parseInt(data))) {
-                messageList+='<div class="message">Column type: number</div>';
-//                messageList.push('Column type: number');
+                messageList.push('Type: number');
             } else {
-                messageList+='<div class="message">Column type: string</div>';
-//                messageList.push('Column type: string');
+                messageList.push('Type: string');
             }
         }
 
         if (search !== '') {
-            messageList+=`<div class="message">Search by: ${search}</div>`;
-            //messageList.push(`Search by: ${search}`);
+            messageList.push(`Search by: ${search}`);
         }
 
         if (typeof sort !== "undefined") {
-            messageList+=`<div class="message">Sort: ${sort}</div>`;
-            //messageList.push(`Sort: ${toUpperCase(sort)}`);
+            messageList.push(`Sort: ${sort}`);
         } else {
             console.log("Unsorted");
         }
 
-       // $('.metaDiv').text(messageList.join(' | '));
-       $('.metaDiv').html('').append(messageList);
+        $('.metaDiv').text(messageList.join(', '));
     });
 
     $('a.toggle-vis').on( 'click', function (e) {
@@ -290,14 +198,45 @@ function addEventListeners() {
     });
 }
 
-// Function to identify whether string is a date
-function isDate(str) {
-    const params = str.split(/[\.\-\/]/);
-    const yyyy = parseInt(params[0],10);
-    const mm   = parseInt(params[1],10);
-    const dd   = parseInt(params[2],10);
-    const date = new Date(yyyy,mm-1,dd,0,0,0,0);
-    return mm === (date.getMonth()+1) && dd === date.getDate() && yyyy === date.getFullYear();
+// Function to update index column with original row number
+function getRowIndex() {
+    const table = $('#main').DataTable();
+    
+    table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+        const data = this.data();
+        data[0] = rowIdx + 1;
+        this.data(data);
+    });
+}
+
+function addToggleLinks() {
+    const table = $('#main').DataTable();
+    let headers = [];
+    table.columns(':visible').every( function () {
+        let header = $(this.header()).text();
+        headers.push(`<a class="toggle-vis" data-column="${this.index()}">${header}</a>`);
+    })
+    headers.shift();
+    headers = headers.join(' - ');
+    headers = `<div class="togglers">Toggle column: ${headers}</div>`;
+    $("#main_filter").before(headers);
+}
+
+function positionMetaDiv() {
+    var y = $(this).scrollTop();
+
+    if (y > 375) {
+        $('.metaDiv').fadeIn();
+        $('.metaDiv').css({
+            "position": "fixed", 
+            "border-bottom": "1px solid #ddd"
+        });
+    } else {
+        $('.metaDiv').css({
+            "position": "static",
+            "border-bottom": ""
+        });
+    }
 }
 
 

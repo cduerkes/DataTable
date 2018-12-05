@@ -62,7 +62,7 @@ section#search-wrapper {
 
 .metaDiv {
     width: 50%;
-    top: 3.9rem;
+    top: 3.5rem;
     height: 5rem;
     margin-bottom: .5rem;
 }
@@ -87,7 +87,7 @@ section#search-wrapper {
 }
 
 #main_wrapper {
-    top: -1rem;
+    top: -1.25rem;
 }
 
 tfoot th {
@@ -100,18 +100,6 @@ table.dataTable tfoot th, table.dataTable tfoot td {
     border-top: 1px solid #111;
 }
 
-.message {
-    height: 3rem;
-    border-radius: 5px;
-/*    background-color: #eaeaea;*/
-    display: inline-block;
-    padding: 5px 15px;
-}
-
-.message:not(:last-child) {
-    margin-right: 10px;
-}
-
 .dataTables_wrapper .dataTables_length {
     float: none;
 }
@@ -119,5 +107,11 @@ table.dataTable tfoot th, table.dataTable tfoot td {
 .togglers {
     float: left;
 }
+
+table.dataTable thead th, table.dataTable thead td {
+    padding: 8px 10px;
+    text-align: left;
+}
+
 
 
