@@ -37,9 +37,10 @@ function createTable(data) {
         ]
     });
 
-    // get index column data
-    getRowIndex();
+    // add index column data
+    addRowIndex();
 
+    // add toggle links
     addToggleLinks();
 }
 
@@ -51,7 +52,7 @@ function buildSearchBody(data) {
         rows += `<tr id="filter_col${i + 1}" data-column="${i + 1}">`;
         rows += `<td>Column - ${data[0][i]}</td>`;
         rows += `<td align="center"><input type="text" class="column_filter" id="col${i + 1}_filter"></td>`;
-        rows += `<td align="center"><input type="checkbox" class="column_filter" id="col${i + 1}_regex"></td>`;
+        rows += `<td align="center"><input type="checkbox" class="column_filter" id="col${i + 1}_regex"></td>`
         rows += `</tr>`;
     }
 
@@ -78,12 +79,59 @@ function renderSearch(data) {
     $('#search-wrapper').append(searchTable);
 }
 
+$.fn.dataTable.ext.search.push(
+    function( settings, data, dataIndex ) {
+        const colInput = $('#col4_filter');
+        var min = colInput.data('greater-than');
+        var max = colInput.data('less-than');
+        var tableData = parseFloat( data[4] ) || 0; // use data for the age column
+        console.log(`tableData: ${tableData}`)
+ 
+        if ( ( isNaN( min ) && isNaN( max ) ) ||
+             ( isNaN( min ) && tableData <= max ) ||
+             ( min <= tableData   && isNaN( max ) ) ||
+             ( min <= tableData   && tableData <= max ) )
+        {
+            return true;
+        }
+        return false;
+    }
+);
+
 // Function to filter table data using input values/regular expressions
 function filterColumn ( i ) {
-    $('#main').DataTable().column( i ).search(
-        $('#col'+i+'_filter').val(),
-        $('#col'+i+'_regex').prop('checked')
-    ).draw();
+    const table = $('#main').DataTable();
+    const data = table.column( i ).data();
+    const colInput = $('#col'+i+'_filter');
+    let query = colInput.val();
+    let min = '';
+    let max = '';
+    let minmaxFlag = '';
+
+    // handle queryies with $, > or <
+    if (query !== '' && query[0].charAt(0) ==='$') {
+        query = query.substring(1);
+    } else if (query !== '' && query[0].charAt(0) ==='>') {
+        min = parseInt(query.substring(1), 10);
+        colInput.data('greater-than', min);
+        table.draw();
+        minmaxFlag = true;
+    } else if (query !== '' && query[0].charAt(0) ==='<') {
+        max = parseInt(query.substring(1), 10);
+        colInput.data('less-than', max);
+        table.draw();
+        minmaxFlag = true;
+    }
+
+    // if query is an integer and column data is not currency, use regex
+    if (!isNaN(parseInt(query)) && data[0].charAt(0) !=='$' && minmaxFlag !== true) {
+        table.column( i ).search("^" + query + "$", true, false, false).draw();
+    } else if (!minmaxFlag) { // otherwise, do ordinary string-based "search"
+        table.column( i ).search(
+            query,
+            $('#col'+i+'_regex').prop('checked')
+        ).draw();
+    }
 }
 
 // Function to build main table header
@@ -199,7 +247,7 @@ function addEventListeners() {
 }
 
 // Function to update index column with original row number
-function getRowIndex() {
+function addRowIndex() {
     const table = $('#main').DataTable();
     
     table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
@@ -209,6 +257,7 @@ function getRowIndex() {
     });
 }
 
+// Functon to add links to toggle column visibility
 function addToggleLinks() {
     const table = $('#main').DataTable();
     let headers = [];
@@ -222,6 +271,7 @@ function addToggleLinks() {
     $("#main_filter").before(headers);
 }
 
+// Function to position sticky div
 function positionMetaDiv() {
     var y = $(this).scrollTop();
 
