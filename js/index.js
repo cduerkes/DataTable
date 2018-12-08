@@ -11,7 +11,7 @@ function parseData(e) {
         dynamicTyping: true,
         complete: function(results) {
             $('header').hide();
-            $('main').prepend(`<h1 class="tableTitle">Genesis Interview Homework (UI/UX)</h1>`);
+            $('main').prepend(`<h1 class="tableTitle">Christopher Duerkes</h1>`);
             createTable(results.data);
             addEventListeners();
         }
